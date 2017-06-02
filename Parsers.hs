@@ -24,26 +24,22 @@ parseNum :: (Num a, Read a) => Parser a
 parseNum = do
     s <- get
     let (digits, s') = break (not . isDigit) s
-    if null digits
-        then mzero
-        else do
-            put s'
-            return . read $ digits
+    guard . not . null $ digits
+    put s'
+    return . read $ digits
 
 parseNumOp :: Num a => Parser (ExpressionTree a -> ExpressionTree a -> ExpressionTree a)
 parseNumOp = do
     s <- get
-    if null s then
-        mzero
-    else
-        let (op:s') = s
-         in do
-            put s'
-            case op of
-                '+' -> return $ Op (+)
-                '-' -> return $ Op (-)
-                '*' -> return $ Op (*)
-                _ -> mzero
+    guard . not . null $ s
+    let (op:s') = s
+     in do
+        put s'
+        case op of
+            '+' -> return $ Op (+)
+            '-' -> return $ Op (-)
+            '*' -> return $ Op (*)
+            _ -> mzero
 
 
 parseOpExpr :: (Read a, Num a) => Parser (ExpressionTree a)
@@ -62,7 +58,7 @@ parseOpExprs = do
     parseOneMore x s
     where parseOneMore x s    = maybe (noMore x) (oneMore x) (runParser parsePartialOpExpr s)
           noMore x            = return x
-          oneMore x (pop, s') = put s' >> parseOneMore (pop x) s'
+          oneMore x (pop, s)  = put s >> parseOneMore (pop x) s
 
 
 parseExpression :: (Read a, Num a) => Parser (ExpressionTree a)
