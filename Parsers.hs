@@ -47,16 +47,13 @@ parseNumOp = do
 
 
 parseOpExpr :: (Read a, Num a) => Parser (ExpressionTree a)
-parseOpExpr = parseNumExpr <**> parsePartialOpExpr
+parseOpExpr = parseNumExpr <**> parseNumOp <*> parseNumExpr
 
 parseNumExpr :: (Read a, Num a) => Parser (ExpressionTree a)
 parseNumExpr = Value <$> parseNum
 
 parsePartialOpExpr :: (Read a, Num a) => Parser (ExpressionTree a -> ExpressionTree a)
-parsePartialOpExpr = do
-    op <- parseNumOp
-    y <- parseNumExpr
-    return $ \x -> op x y
+parsePartialOpExpr = flip <$> parseNumOp <*> parseNumExpr
 
 parseOpExprs :: (Read a, Num a) => Parser (ExpressionTree a)
 parseOpExprs = do
