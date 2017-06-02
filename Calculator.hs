@@ -13,7 +13,7 @@ import Parsers
 import Parsing
 import ExpressionTree
 
-parseInput :: (Num a, Read a
+parseInput :: ( Num a, Read a
               , MonadState (ExpressionTree a) m
               , MonadError String m)
               => String -> m ()
@@ -25,13 +25,16 @@ parseInput s = do
     maybe (throwError "Parse error") handle parsed
     where handle (expr', s') = put expr' >> parseInput s'
 
-evalAndPrint :: (Show a, MonadIO m, MonadState (ExpressionTree a) m) => m ()
+evalAndPrint :: ( Show a
+                , MonadIO m
+                , MonadState (ExpressionTree a) m)
+                => m ()
 evalAndPrint = do
     x <- evaluate <$> get
     put $ Value x
     liftIO . putStrLn . show $ x
 
-calculator :: ( Floating a, Read a, Show a
+calculator :: ( Num a, Read a, Show a
               , MonadIO m
               , MonadState (ExpressionTree a) m
               , MonadError String m
@@ -44,7 +47,7 @@ calculator = do
             parseInput input
             evalAndPrint
             calculator
-        True -> return ()
+        True -> liftIO $ putStrLn "Byebye!"
 
 
 main = runStateT (runExceptT $ calculator `catchError` handler) (Value 0)
