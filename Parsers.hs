@@ -47,14 +47,10 @@ parseNumOp = do
 
 
 parseOpExpr :: (Read a, Num a) => Parser (ExpressionTree a)
-parseOpExpr = do
-    x <- parseNumExpr
-    op <- parseNumOp
-    y <- parseNumExpr
-    return $ op x y
+parseOpExpr = parseNumExpr <**> parsePartialOpExpr
 
 parseNumExpr :: (Read a, Num a) => Parser (ExpressionTree a)
-parseNumExpr = parseNum >>= (return . Value)
+parseNumExpr = Value <$> parseNum
 
 parsePartialOpExpr :: (Read a, Num a) => Parser (ExpressionTree a -> ExpressionTree a)
 parsePartialOpExpr = do
@@ -66,11 +62,10 @@ parseOpExprs :: (Read a, Num a) => Parser (ExpressionTree a)
 parseOpExprs = do
     x <- parseOpExpr
     s <- get
-    parseOneMore x (runParser parsePartialOpExpr s)
-    where parseOneMore x Nothing = return x
-          parseOneMore x (Just (pop, s')) = do
-            put s'
-            parseOneMore (pop x) (runParser parsePartialOpExpr s')
+    parseOneMore x s
+    where parseOneMore x s    = maybe (noMore x) (oneMore x) (runParser parsePartialOpExpr s)
+          noMore x            = return x
+          oneMore x (pop, s') = put s' >> parseOneMore (pop x) s'
 
 
 parseExpression :: (Read a, Num a) => Parser (ExpressionTree a)
