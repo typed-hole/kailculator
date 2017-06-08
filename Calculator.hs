@@ -1,17 +1,17 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
-import Control.Applicative
-import Control.Monad
-import Control.Monad.State.Class
-import Control.Monad.Error.Class
-import Control.Monad.Trans
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.State (runStateT)
-import Text.Read (readMaybe)
+import           Control.Applicative
+import           Control.Monad
+import           Control.Monad.Error.Class
+import           Control.Monad.State.Class
+import           Control.Monad.Trans
+import           Control.Monad.Trans.Except
+import           Control.Monad.Trans.State  (runStateT)
 
-import Parsers
-import Parsing
-import ExpressionTree
+import           ExpressionTree
+import           Parsers
+import           Parsing
 
 parseInput :: ( Num a, Read a
               , MonadState (ExpressionTree a) m
@@ -32,7 +32,7 @@ evalAndPrint :: ( Show a
 evalAndPrint = do
     x <- evaluate <$> get
     put $ Value x
-    liftIO . putStrLn . show $ x
+    liftIO . print $ x
 
 calculator :: ( Num a, Read a, Show a
               , MonadIO m
@@ -41,13 +41,14 @@ calculator :: ( Num a, Read a, Show a
               , MonadPlus m )
               => m ()
 calculator = do
-    input <- liftIO $ getLine
-    case null input of
-        False -> do
+    input <- liftIO getLine
+    if not . null $ input then
+        do
             parseInput input
             evalAndPrint
             calculator
-        True -> liftIO $ putStrLn "Byebye!"
+    else
+        liftIO $ putStrLn "Byebye!"
 
 
 main = runStateT (runExceptT $ calculator `catchError` handler) (Value 0)
