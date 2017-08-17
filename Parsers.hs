@@ -23,7 +23,7 @@ import Parsing
 parseNum :: (Num a, Read a) => Parser a
 parseNum = do
     s <- get
-    let (digits, s') = break (not . isDigit) s
+    let (digits, s') = span isDigit s
     guard . not . null $ digits
     put s'
     return . read $ digits
@@ -57,7 +57,7 @@ parseOpExprs = do
     s <- get
     parseOneMore x s
     where parseOneMore x s    = maybe (noMore x) (oneMore x) (runParser parsePartialOpExpr s)
-          noMore x            = return x
+          noMore                = return
           oneMore x (pop, s)  = put s >> parseOneMore (pop x) s
 
 
@@ -67,4 +67,4 @@ parseExpression = parseOpExprs <|> parseNumExpr
 unwrapOpParser :: Parser (ExpressionTree a) -> String -> Maybe (a, String)
 unwrapOpParser p s = do
     (expr, s') <- runParser p s
-    return $ (evaluate expr, s')
+    return (evaluate expr, s')
